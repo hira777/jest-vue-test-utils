@@ -1,3 +1,3 @@
-// module.exports = {
-//   extends: ['plugin:jest/recommended']
-// };
+module.exports = {
+  extends: ['plugin:jest/recommended']
+};
