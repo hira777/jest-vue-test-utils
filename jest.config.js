@@ -1,4 +1,7 @@
 module.exports = {
+  // テスト対象
+  testMatch: ['<rootDir>/test/**/*.spec.js'],
+
   // 名前解決をするためのエイリアスの指定をする。
   // webpackの`resolve.alias`で`'@': path.resolve(__dirname, 'src')`みたいものを指定している場合
   // こちらにも指定しないと名前解決できないのでテストができない。
