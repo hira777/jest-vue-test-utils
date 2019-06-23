@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Level.vue snapshot empty string 1`] = `
+<div style="display: none;">
+  <p style="display: none;">good</p>
+  <p style="display: none;">very good</p>
+  <p style="display: none;">excellent</p>
+</div>
+`;
+
+exports[`Level.vue snapshot excellent 1`] = `
+<div>
+  <p style="display: none;">good</p>
+  <p style="display: none;">very good</p>
+  <p>excellent</p>
+</div>
+`;
+
+exports[`Level.vue snapshot good 1`] = `
+<div>
+  <p>good</p>
+  <p style="display: none;">very good</p>
+  <p style="display: none;">excellent</p>
+</div>
+`;
+
+exports[`Level.vue snapshot veryGood 1`] = `
+<div>
+  <p style="display: none;">good</p>
+  <p>very good</p>
+  <p style="display: none;">excellent</p>
+</div>
+`;
