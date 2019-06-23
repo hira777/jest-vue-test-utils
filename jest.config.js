@@ -22,5 +22,9 @@ module.exports = {
   },
 
   // snapshotSerializers（スナップショットを整形して読みやすくしてくれるやつ）を指定する。
-  snapshotSerializers: ['jest-serializer-vue']
+  snapshotSerializers: ['jest-serializer-vue'],
+
+  // テストが実行される前に実行されるファイル
+  // グローバル変数やモックのデフォルト値を設定することで、テスト毎に定義する必要がなくなる
+  setupFiles: ['<rootDir>/jest.init.js']
 };
