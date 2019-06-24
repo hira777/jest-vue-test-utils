@@ -91,6 +91,181 @@ PASS  test/utils/sum.spec.js
 
 ### モック関数
 
+テストダブルのスパイにあたる関数。
+
+- 関数（メソッド）が呼び出されたかどうか
+- 関数（メソッド）が呼び出された回数
+- 関数（メソッド）に渡された実引数
+
+などを検証するために利用する。
+
+テスト対象が依存している、テスト対象以外の関数や外部モジュールのメソッドをモック関数に置き換えることで、テストをしやすくなる。
+
+#### モック関数の利用例
+
+以下の`forEach`関数をテストする。
+
+```js
+const forEach = (items, callback) => {
+  for (let index = 0; index < items.length; index++) {
+    callback(items[index]);
+  }
+};
+
+export default forEach;
+```
+
+`forEach`関数に渡されたコールバックが正しく呼びされているか検証するために、モック関数を生成し、コールバック関数として渡す。
+
+```js
+export default forEach;
+
+import forEach from '@/mock-functions/forEach';
+
+describe('forEach', () => {
+  it('コールバック関数が正しく呼び出される', () => {
+    // モック関数を生成する
+    const mockCallback = jest.fn(x => 42 + x);
+    forEach([0, 1], mockCallback);
+
+    // モック関数が2回呼ばれたことを期待する
+    expect(mockCallback.mock.calls.length).toBe(2);
+
+    // モック関数が初めて呼ばれた時に渡された第1引数は0であることを期待する
+    expect(mockCallback.mock.calls[0][0]).toBe(0);
+
+    // モック関数が2回目に呼ばれた時に渡された第1引数は1であることを期待する
+    expect(mockCallback.mock.calls[1][0]).toBe(1);
+
+    // モック関数が初めて呼ばれた時の戻り値が42であることを期待する
+    expect(mockCallback.mock.results[0].value).toBe(42);
+  });
+});
+```
+
+すべてのモック関数には`.mock`プロパティが存在し、モック関数呼び出し時のデータと、関数の返り値が記録されている。
+
+そのため、関数がどのように呼び出され、どのようにインスタンス化され、返り値が何であったのかを確認することができる。
+
+##### マッチャーを利用して簡潔に書く
+
+上記のテストコードは以下のように`toBe`以外のマッチャーを利用すれば、より簡潔にかける。
+
+```js
+// モック関数を生成する
+const mockCallback = jest.fn(x => 42 + x);
+forEach([0, 1], mockCallback);
+
+// モック関数が2回呼ばれたことを期待する
+expect(mockCallback).toHaveBeenCalledTimes(2);
+
+// モック関数が初めて呼ばれた時に渡された第1引数は0であることを期待する
+expect(mockCallback).toHaveBeenNthCalledWith(1, 0);
+
+// モック関数が2回目に呼ばれた時に渡された第1引数は1であることを期待する
+expect(mockCallback).toHaveBeenNthCalledWith(2, 1);
+
+// モック関数が初めて呼ばれた時の戻り値が42であることを期待する
+expect(mockCallback).toHaveNthReturnedWith(1, 42);
+```
+
+やっていることは同じであり、糖衣構文という認識で問題ない。
+
+#### モック関数の戻り値を指定する
+
+以下のように`mockReturnValueOnce`を利用すれば呼び出した回数に応じた戻り値を返すことも可能。
+
+```js
+const myMock = jest.fn();
+console.log(myMock());
+// > undefined
+
+myMock
+  .mockReturnValueOnce(10)
+  .mockReturnValueOnce('x')
+  .mockReturnValue(true);
+
+console.log(myMock(), myMock(), myMock(), myMock());
+// > 10, 'x', true, true
+```
+
+##### なぜモック関数の戻り値を指定するのか
+
+モック関数の戻り値を指定することでテストがやりやすくなるから。
+
+たとえば、以下のテストの場合、`filter()`が期待した値を返すかどうかをテストしたい。
+
+```js
+describe('filter', () => {
+  it('creates a new array with all elements that pass the test implemented', () => {
+    const filterTestFn = jest.fn();
+    // １回目の呼び出しは`true`を返し、2回目の呼び出しは`false`を返す
+    filterTestFn.mockReturnValueOnce(true).mockReturnValueOnce(false);
+
+    const actual = [11, 12].filter(filterTestFn);
+
+    expect(actual).toEqual([11]);
+  });
+});
+```
+
+本来、この関数に引数として渡すコールバック関数は無茶苦茶複雑かもしれないが、今回はあくまで`filter()`がうまく動作しているかどうかのテストをしたい。
+
+テストをするためには、コールバック関数が`true`か`false`を返せば良いだけなので、モック関数`filterTestFn`を定義し、呼び出し回数に応じた戻り値を指定している。
+
+### モジュールをモックに置き換える
+
+モック関数と同様で、モジュールをモックに置き換えることで、テストがしやすくなる。
+
+#### 外部モジュールをモックに置き換える
+
+以下のコードの`all`メソッドをテストする。
+
+```js
+import axios from 'axios';
+
+class Users {
+  static all() {
+    return axios.get('/users.json').then(response => response.data);
+  }
+}
+
+export default Users;
+```
+
+このメソッドは
+
+- 外部モジュールの`axios`
+- 外部ファイルの`/users.json`
+
+に依存している。
+
+今回テストをしたいことは、「`all()`メソッドが期待されている値を返すかどうか」である。
+
+より具体的に言えば、「`all()`メソッドが`axios.get()`がresolveする`respose.data`を返すかどうか」さえ確認できれば良いため、今回は`axios.get()`が何をするのか、`/users.json`はどのような内容なのかは知る必要がない。
+
+そのため、不要依存を排除してテストをし易くするために、`axios`をモックに置き換え、`get()`メソッドをオーバーライドする。
+
+```js
+import axios from 'axios';
+import Users from '@/mock-functions/users';
+
+// axiosモジュールをモックにする
+jest.mock('axios');
+test('should fetch users', async () => {
+  // `axios.get`メソッドを`{ data: [{ name: 'Bob' }] }`を返すモック関数にする
+  // そのため、`Users.all`メソッド内で実行される`axios.get('/users.json')`は
+  // `{ data: [{ name: 'Bob' }] }`を返すようになる
+  const users = [{ name: 'Bob' }];
+  axios.get.mockResolvedValue({ data: users });
+  // ↑は以下の糖衣構文、Promise構文を簡潔に書ける。
+  // axios.get.mockImplementation(() => Promise.resolve(resp));
+
+  const response = await Users.all();
+  expect(response).toEqual(users);
+});
+```
+
 ## 何をテストするのか
 
 [一般的なヒント | Vue Test Utils](https://vue-test-utils.vuejs.org/ja/guides/common-tips.html)では以下のように記載されている。
