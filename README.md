@@ -306,6 +306,127 @@ test('should fetch users', async () => {
 
 ### 単純なボタンコンポーネントのテスト
 
+### ユーザー操作などにより発生するイベントをシミュレーションしたテスト
+
+以下はフォームをサブミットすると、ユーザーの入力に応じたメッセージが表示されるコンポーネント。
+
+```html
+<template>
+  <div>
+    <form v-if="asyncTest" @submit.prevent="handleSubmitAsync">
+      <input v-model="username" data-username />
+      <input type="submit" />
+    </form>
+    <form v-else @submit.prevent="handleSubmit">
+      <input v-model="username" data-username />
+      <input type="submit" />
+    </form>
+
+    <div v-if="submitted" class="message">
+      Thank you for your submission, {{ username }}.
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'FormSubmitter',
+  data() {
+    return {
+      username: '',
+      submitted: false,
+      asyncTest: false
+    };
+  },
+  methods: {
+    handleSubmit() {
+      this.submitted = true;
+    },
+    handleSubmitAsync() {
+      return this.$http
+        .get('/api/v1/register', { username: this.username })
+        .then(() => {
+          this.submitted = true;
+        })
+        .catch(e => {
+          throw Error('Something went wrong', e);
+        });
+    }
+  }
+};
+</script>
+```
+
+このコンポーネントに対しては以下のテストする。
+
+- フォームをサブミット後、ユーザーの入力に応じた正しいメッセージが表示されるか
+- 正しいAPIエンドポイントが使用されたかどうか
+- リクエストボディは正しいか
+
+`handleSubmitAsync`メソッドはAPIを呼び出しているが、このAPI呼び出し（`/api/v1/register`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
+
+それを防ぐためにJestの`jest.mock`を利用して、API呼び出しをしている`$http`を、`mocks`オプションを利用してモックに置き換える。
+
+```js
+import flushPromises from 'flush-promises';
+import { shallowMount } from '@vue/test-utils';
+import FormSubmitter from '@/components/simulating-user-input/FormSubmitter.vue';
+
+let url = '';
+let data = '';
+
+const mockHttp = {
+  get: (_url, _data) => {
+    return new Promise(resolve => {
+      url = _url;
+      data = _data;
+      resolve();
+    });
+  }
+};
+
+describe('FormSubmitter.vue', () => {
+  it('フォームをサブミットするとお知らせを表示', () => {
+    const wrapper = shallowMount(FormSubmitter);
+
+    // ユーザー入力を再現する
+    wrapper.find('[data-username]').setValue('alice');
+    wrapper.find('form').trigger('submit.prevent');
+
+    expect(wrapper.find('.message').text()).toBe(
+      'Thank you for your submission, alice.'
+    );
+  });
+
+  it('フォームをサブミットするとお知らせを表示（非同期）', async () => {
+    const wrapper = shallowMount(FormSubmitter, {
+      data() {
+        return {
+          asyncTest: true
+        };
+      },
+      mocks: {
+        // this.$httpをモック関数にする
+        $http: mockHttp
+      }
+    });
+
+    wrapper.find('[data-username]').setValue('alice');
+    wrapper.find('form').trigger('submit.prevent');
+
+    // サブミット時の非同期処理が完了するのを待つ
+    // そうしないと、非同期処理の完了前にアサートが実行され、テストが失敗する
+    await flushPromises();
+
+    expect(wrapper.find('.message').text()).toBe(
+      'Thank you for your submission, alice.'
+    );
+    expect(url).toBe('/api/v1/register');
+    expect(data).toEqual({ username: 'alice' });
+  });
+});
+```
+
 ## Vuexの単体テスト
 
 以下がテスト対象になるが、それぞれはただの関数なので単体テストは容易にできる。
@@ -356,9 +477,9 @@ describe('SET_POST', () => {
 
 以下の動作をするActionをテストする。
 
-1. APIを非同期呼び出しをする
-2. データに対して何らかの処理を行う
-3. ペイロードとして結果を使ってミューテーションをコミットする
+- APIを非同期呼び出しをする
+- データに対して何らかの処理を行う
+- ペイロードとして結果を使ってミューテーションをコミットする
 
 ```js
 import axios from 'axios';
@@ -381,13 +502,13 @@ export default {
 
 このActionに対しては以下のテストをする。
 
-1. 正しいAPIエンドポイントが使用されたかどうか
-2. ペイロードは正しいか
-3. 正しいミューテーションがコミットされた
+- 正しいAPIエンドポイントが使用されたかどうか
+- リクエストボディは正しいか
+- 正しいミューテーションがコミットされたか
 
 今回テストするActionはAPIを呼び出しているが、このAPI呼び出し（`/api/authenticate`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
 
-それを防ぐためにJestの`jest.mock`を利用して、API呼び出しをモックに置き換える。
+それを防ぐためにJestの`jest.mock`を利用して、API呼び出しをしている`axios`をモックに置き換える。
 
 また、Vuexの依存を排除するために、`commit`もモックに置き換える。
 
