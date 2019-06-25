@@ -1,9 +1,13 @@
-# JestとVue Test Utilsを利用したコンポーネントの単体テストに関して
+# JestとVue Test Utilsを利用したVueコンポーネントとVuexの単体テストに関して
 
-今回、以下のライブラリ(フレームワーク)を利用する。
+今回、VueコンポーネントとVuexのテストをするために、以下のライブラリ(フレームワーク)を利用する。
 
 - Jest: テストフレームワーク
 - Vue Test Utils: Vueコンポーネントをテストするためのライブラリ
+
+テストフレークは色々存在するが、Jestを利用する。
+
+Vue Test Utilsは必須（他にもVueをテストできるライブラリがあるが現在はこれが主流だと思う）。
 
 ## なぜJestを利用するのか
 
@@ -270,7 +274,9 @@ test('should fetch users', async () => {
 });
 ```
 
-## コンポーネントの何をテストするのか
+## Vueコンポーネントの単体テスト
+
+### コンポーネントの何をテストするのか
 
 [一般的なヒント | Vue Test Utils](https://vue-test-utils.vuejs.org/ja/guides/common-tips.html)では以下のように記載されている。
 
@@ -297,6 +303,198 @@ test('should fetch users', async () => {
 - 特定のイベントが発火した際に、正常に動作しているか
 - $emitでイベントが正しく発⽕するか
 - slotが正しく動作するか
+
+### 単純なボタンコンポーネントのテスト
+
+## Vuexの単体テスト
+
+以下がテスト対象になるが、それぞれはただの関数なので単体テストは容易にできる。
+
+- Mutaions
+- Actions
+- Getters
+
+### Mutaionsのテスト
+
+以下のMutaionをテストする。
+
+```js
+export default {
+  SET_POST(state, { post }) {
+    state.postIds.push(post.id);
+    state.posts = { ...state.posts, [post.id]: post };
+  }
+};
+```
+
+Mutaionに引数を渡してコミットすることで、Stateが正しく変更されているかをテストする。
+
+`SET_POST()`自体はただの関数なので、以下のように通常の関数と同じようにテストできる。
+
+```js
+import mutations from '@/store/simple-example/mutations.js';
+
+describe('SET_POST', () => {
+  it('state に投稿を追加する ', () => {
+    const post = { id: 1, title: 'post' };
+    const state = {
+      postIds: [],
+      posts: {}
+    };
+
+    mutations.SET_POST(state, { post });
+
+    expect(state).toEqual({
+      postIds: [1],
+      posts: { '1': post }
+    });
+  });
+});
+```
+
+### Actionsのテスト
+
+以下の動作をするActionをテストする。
+
+1. APIを非同期呼び出しをする
+2. データに対して何らかの処理を行う
+3. ペイロードとして結果を使ってミューテーションをコミットする
+
+```js
+import axios from 'axios';
+
+export default {
+  async authenticate({ commit }, { username, password }) {
+    try {
+      const authenticated = await axios.post('/api/authenticate', {
+        username,
+        password
+      });
+
+      commit('SET_AUTHENTICATED', authenticated);
+    } catch (e) {
+      throw Error('API Error occurred.');
+    }
+  }
+};
+```
+
+このActionに対しては以下のテストをする。
+
+1. 正しいAPIエンドポイントが使用されたかどうか
+2. ペイロードは正しいか
+3. 正しいミューテーションがコミットされた
+
+今回テストするActionはAPIを呼び出しているが、このAPI呼び出し（`/api/authenticate`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
+
+それを防ぐためにJestの`jest.mock`を利用して、API呼び出しをモックに置き換える。
+
+また、Vuexの依存を排除するために、`commit`もモックに置き換える。
+
+```js
+import actions from '@/store/simple-example/actions.js';
+
+let url = '';
+let body = {};
+let mockError = false;
+
+// axiosモジュールをモックにする
+jest.mock('axios', () => ({
+  // postメソッドを、Promiseを即時にresolveするようにオーバーライドする
+  post: (_url, _body) => {
+    return new Promise(resolve => {
+      if (mockError) throw Error('Mock error');
+      url = _url;
+      body = _body;
+      resolve(true);
+    });
+  }
+}));
+
+describe('authenticate', () => {
+  it('authenticated a user ', async () => {
+    // Vuexの依存を排除するために、commitはモックを利用する
+    const commit = jest.fn();
+    const username = 'alice';
+    const password = 'password';
+
+    await actions.authenticate({ commit }, { username, password });
+
+    // axios.post()に渡されたURLが正しいか
+    expect(url).toBe('/api/authenticate');
+    // axios.post()に渡されたrequest bodyが正しいか
+    expect(body).toEqual({ username, password });
+    // commitが正しく実行されたか
+    expect(commit).toHaveBeenCalledWith('SET_AUTHENTICATED', true);
+  });
+
+  it('catches an error', async () => {
+    mockError = true;
+
+    await expect(
+      actions.authenticate({ commit: jest.fn() }, {})
+    ).rejects.toThrow('API Error occurred.');
+  });
+});
+```
+
+### Gettersのテスト
+
+以下のGetterをテストする。
+
+```js
+export default {
+  poodles: state => {
+    return state.dogs.filter(dog => dog.breed === 'poodle');
+  },
+
+  poodlesByAge: (state, getters) => age => {
+    return getters.poodles.filter(dog => dog.age === age);
+  }
+};
+```
+
+これもMutaionsと同様でただの関数なので、以下のように通常の関数と同じようにテストできる。
+
+```js
+import getters from '@/store/simple-example/getters.js';
+
+const dogs = [
+  { name: 'lucky', breed: 'poodle', age: 1 },
+  { name: 'pochy', breed: 'dalmatian', age: 2 },
+  { name: 'blackie', breed: 'poodle', age: 4 }
+];
+const state = { dogs };
+
+describe('poodles', () => {
+  it('returns poodles', () => {
+    const actual = getters.poodles(state);
+    expect(actual).toEqual([dogs[0], dogs[2]]);
+  });
+
+  describe('poodlesByAge', () => {
+    it('returns poodles by age', () => {
+      const poodles = [dogs[0], dogs[2]];
+      const actual = getters.poodlesByAge(state, { poodles })(1);
+      expect(actual).toEqual([dogs[0]]);
+    });
+  });
+});
+```
+
+`poodlesByAge`は他のGetterに依存しているGetterだが、他のGetterが正しく動いている前提でテストをするので`const poodles = [dogs[0], dogs[2]];`のような固定値を引数に渡して問題ない。
+
+そのため、以下のようなテストをする必要はない。
+
+```js
+it('returns poodles by age', () => {
+  const poodles = getters.poodles(state);
+  const actual = getters.poodlesByAge(state, { poodles })(1);
+  expect(actual).toEqual([dogs[0]]);
+});
+```
+
+この場合、`getters.poodles()`が原因でテストが失敗する可能性があるため、そもそも単体テストになっていない。
 
 ## Note
 
