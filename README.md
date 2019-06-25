@@ -48,7 +48,7 @@ npm i jest -D
 
 ### テスト対象とテストコードの準備
 
-今回テストをするのは、引数を合計する`sum.js`
+今回テストをするのは、引数を合計する`src/utils/sum.js`
 
 ```js
 const sum = (number, number2) => number + number2;
@@ -56,7 +56,7 @@ const sum = (number, number2) => number + number2;
 export default sum;
 ```
 
-これをテストする`sum.spec.js`は以下のようになる。
+これをテストする`src/test/utils/sum.spec.js`は以下のようになる。
 
 ```js
 import sum from '@/utils/sum';
@@ -88,6 +88,10 @@ PASS  test/utils/sum.spec.js
   sum
     ✓ adds 1 + 2 to equal 3 (1ms)
 ```
+
+## Jestの様々な機能
+
+今回、コンポーネントのテストをするためには、モックだけ知っておけばなんとかなるので、それに関してだけ記載する。
 
 ### モック関数
 
@@ -219,7 +223,7 @@ describe('filter', () => {
 
 #### 外部モジュールをモックに置き換える
 
-以下のコードの`all`メソッドをテストする。
+以下の`Users`クラスの`all`メソッドをテストする。
 
 ```js
 import axios from 'axios';
@@ -242,9 +246,9 @@ export default Users;
 
 今回テストをしたいことは、「`all()`メソッドが期待されている値を返すかどうか」である。
 
-より具体的に言えば、「`all()`メソッドが`axios.get()`がresolveする`respose.data`を返すかどうか」さえ確認できれば良いため、今回は`axios.get()`が何をするのか、`/users.json`はどのような内容なのかは知る必要がない。
+より具体的に言えば、「`all()`メソッドが、`axios.get()`がresolveする`respose.data`を返すかどうか」さえ確認できれば良いため、今回は`axios.get()`が何をするのか、`/users.json`はどのような内容なのかは知る必要がない。
 
-そのため、不要依存を排除してテストをし易くするために、`axios`をモックに置き換え、`get()`メソッドをオーバーライドする。
+そのため、不要な依存を排除してテストをし易くするために、`axios`をモックに置き換え、`get()`メソッドをオーバーライドする。
 
 ```js
 import axios from 'axios';
@@ -266,7 +270,7 @@ test('should fetch users', async () => {
 });
 ```
 
-## 何をテストするのか
+## コンポーネントの何をテストするのか
 
 [一般的なヒント | Vue Test Utils](https://vue-test-utils.vuejs.org/ja/guides/common-tips.html)では以下のように記載されている。
 
