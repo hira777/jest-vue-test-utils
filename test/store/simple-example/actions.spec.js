@@ -6,7 +6,7 @@ let mockError = false;
 
 // axiosモジュールをモックにする
 jest.mock('axios', () => ({
-  // postメソッドをオーバーライドする
+  // postメソッドを、Promiseを即時にresolveするようにオーバーライドする
   post: (_url, _body) => {
     return new Promise(resolve => {
       if (mockError) throw Error('Mock error');
