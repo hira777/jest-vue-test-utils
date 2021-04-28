@@ -1,15 +1,15 @@
-# JestとVue Test Utilsを利用したVueコンポーネントとVuexの単体テストに関して
+# Jest と Vue Test Utils を利用した Vue コンポーネントと Vuex の単体テストに関して
 
-今回、VueコンポーネントとVuexのテストをするために、以下のライブラリ(フレームワーク)を利用する。
+今回、Vue コンポーネントと Vuex のテストをするために、以下のライブラリ(フレームワーク)を利用する。
 
 - Jest: テストフレームワーク
-- Vue Test Utils: Vueコンポーネントをテストするためのライブラリ
+- Vue Test Utils: Vue コンポーネントをテストするためのライブラリ
 
-テストフレークは色々存在するが、Jestを利用する。
+テストフレークは色々存在するが、Jest を利用する。
 
-Vue Test Utilsは必須（他にもVueをテストできるライブラリがあるが現在はこれが主流だと思う）。
+Vue Test Utils は必須（他にも Vue をテストできるライブラリがあるが現在はこれが主流だと思う）。
 
-## なぜJestを利用するのか
+## なぜ Jest を利用するのか
 
 一言で言えば「全部入り」だから。
 
@@ -40,7 +40,7 @@ Jest はそのような悩みを解消したライブラリであり、上記の
 
 今回に限らず、「テストの興味はあるが、選択肢が多すぎてどれを利用すれば良いのかわからない。」と思っている人々はとりあえず Jest を使ってみれば良いと思う。
 
-## Jestの基本的な使いかた
+## Jest の基本的な使いかた
 
 ### インストール
 
@@ -63,13 +63,13 @@ export default sum;
 これをテストする`src/test/utils/sum.spec.js`は以下のようになる。
 
 ```js
-import sum from '@/utils/sum';
+import sum from "@/utils/sum";
 
 // sumという名前のdescribeブロックを作成する
 // 要は「このブロックの中ではsumのテストをするぜ」みたいな宣言のようなもの
-describe('sum', () => {
+describe("sum", () => {
   // テスト内容（期待する動作とそれを確認するためのアサーション）を定義する
-  it('adds 1 + 2 to equal 3', () => {
+  it("adds 1 + 2 to equal 3", () => {
     // 実行するアサーション（テスト結果が期待通りであるか判定する関数）
     expect(sum(1, 2)).toBe(3);
   });
@@ -80,7 +80,7 @@ describe('sum', () => {
 
 オプションや設定ファイルがない状態で`jest`コマンドを実行すれば、デフォルトで以下を検出してテストを実行する。
 
-- `__tests__`ディレクトリ内の`.js`、`.jsx`、`.ts`および`.tsx`ファイルd
+- `__tests__`ディレクトリ内の`.js`、`.jsx`、`.ts`および`.tsx`ファイル d
 - 拡張子が`.test`または`.spec`のファイル（`Component.test.js`や`Component.spec.js`など）
 - `test.js`、`spec.js`
 
@@ -93,7 +93,7 @@ PASS  test/utils/sum.spec.js
     ✓ adds 1 + 2 to equal 3 (1ms)
 ```
 
-## Jestの様々な機能
+## Jest の様々な機能
 
 今回、コンポーネントのテストをするためには、モックだけ知っておけばなんとかなるので、それに関してだけ記載する。
 
@@ -128,12 +128,12 @@ export default forEach;
 ```js
 export default forEach;
 
-import forEach from '@/mock-functions/forEach';
+import forEach from "@/mock-functions/forEach";
 
-describe('forEach', () => {
-  it('コールバック関数が正しく呼び出される', () => {
+describe("forEach", () => {
+  it("コールバック関数が正しく呼び出される", () => {
     // モック関数を生成する
-    const mockCallback = jest.fn(x => 42 + x);
+    const mockCallback = jest.fn((x) => 42 + x);
     forEach([0, 1], mockCallback);
 
     // モック関数が2回呼ばれたことを期待する
@@ -161,7 +161,7 @@ describe('forEach', () => {
 
 ```js
 // モック関数を生成する
-const mockCallback = jest.fn(x => 42 + x);
+const mockCallback = jest.fn((x) => 42 + x);
 forEach([0, 1], mockCallback);
 
 // モック関数が2回呼ばれたことを期待する
@@ -188,10 +188,7 @@ const myMock = jest.fn();
 console.log(myMock());
 // > undefined
 
-myMock
-  .mockReturnValueOnce(10)
-  .mockReturnValueOnce('x')
-  .mockReturnValue(true);
+myMock.mockReturnValueOnce(10).mockReturnValueOnce("x").mockReturnValue(true);
 
 console.log(myMock(), myMock(), myMock(), myMock());
 // > 10, 'x', true, true
@@ -204,8 +201,8 @@ console.log(myMock(), myMock(), myMock(), myMock());
 たとえば、以下のテストの場合、`filter()`が期待した値を返すかどうかをテストしたい。
 
 ```js
-describe('filter', () => {
-  it('creates a new array with all elements that pass the test implemented', () => {
+describe("filter", () => {
+  it("creates a new array with all elements that pass the test implemented", () => {
     const filterTestFn = jest.fn();
     // １回目の呼び出しは`true`を返し、2回目の呼び出しは`false`を返す
     filterTestFn.mockReturnValueOnce(true).mockReturnValueOnce(false);
@@ -230,11 +227,11 @@ describe('filter', () => {
 以下の`Users`クラスの`all`メソッドをテストする。
 
 ```js
-import axios from 'axios';
+import axios from "axios";
 
 class Users {
   static all() {
-    return axios.get('/users.json').then(response => response.data);
+    return axios.get("/users.json").then((response) => response.data);
   }
 }
 
@@ -250,21 +247,21 @@ export default Users;
 
 今回テストをしたいことは、「`all()`メソッドが期待されている値を返すかどうか」である。
 
-より具体的に言えば、「`all()`メソッドが、`axios.get()`がresolveする`respose.data`を返すかどうか」さえ確認できれば良いため、今回は`axios.get()`が何をするのか、`/users.json`はどのような内容なのかは知る必要がない。
+より具体的に言えば、「`all()`メソッドが、`axios.get()`が resolve する`respose.data`を返すかどうか」さえ確認できれば良いため、今回は`axios.get()`が何をするのか、`/users.json`はどのような内容なのかは知る必要がない。
 
 そのため、不要な依存を排除してテストをし易くするために、`axios`をモックに置き換え、`get()`メソッドをオーバーライドする。
 
 ```js
-import axios from 'axios';
-import Users from '@/mock-functions/users';
+import axios from "axios";
+import Users from "@/mock-functions/users";
 
 // axiosモジュールをモックにする
-jest.mock('axios');
-test('should fetch users', async () => {
+jest.mock("axios");
+test("should fetch users", async () => {
   // `axios.get`メソッドを`{ data: [{ name: 'Bob' }] }`を返すモック関数にする
   // そのため、`Users.all`メソッド内で実行される`axios.get('/users.json')`は
   // `{ data: [{ name: 'Bob' }] }`を返すようになる
-  const users = [{ name: 'Bob' }];
+  const users = [{ name: "Bob" }];
   axios.get.mockResolvedValue({ data: users });
   // ↑は以下の糖衣構文、Promise構文を簡潔に書ける。
   // axios.get.mockImplementation(() => Promise.resolve(resp));
@@ -274,15 +271,15 @@ test('should fetch users', async () => {
 });
 ```
 
-## Vueコンポーネントの単体テスト
+## Vue コンポーネントの単体テスト
 
 ### コンポーネントの何をテストするのか
 
 [一般的なヒント | Vue Test Utils](https://vue-test-utils.vuejs.org/ja/guides/common-tips.html)では以下のように記載されている。
 
->UI コンポーネントでは、コンポーネントの内部実装の詳細に集中しすぎて脆弱なテストが発生する可能性があるため、完全なラインベースのカバレッジを目指すことはお勧めしません。
+> UI コンポーネントでは、コンポーネントの内部実装の詳細に集中しすぎて脆弱なテストが発生する可能性があるため、完全なラインベースのカバレッジを目指すことはお勧めしません。
 
->コンポーネントのパブリックインターフェイスを検証するテストを作成し、内部をブラックボックスとして扱うことをお勧めします。単一のテストケースでは、コンポーネントに提供された入力（ユーザーのやり取りやプロパティの変更）によって、期待される出力（結果の描画またはカスタムイベントの出力）が行われることが示されます。
+> コンポーネントのパブリックインターフェイスを検証するテストを作成し、内部をブラックボックスとして扱うことをお勧めします。単一のテストケースでは、コンポーネントに提供された入力（ユーザーのやり取りやプロパティの変更）によって、期待される出力（結果の描画またはカスタムイベントの出力）が行われることが示されます。
 
 つまり、コンポーネントのテストの考え方は通常の関数のテストと同じで、入力に対して出力（描画、イベントの発火、メソッドが動作したかなど）が正しいかどうかをテストすれば良い。
 
@@ -298,11 +295,11 @@ test('should fetch users', async () => {
 
 - コンポーネントの描画内容が正しいか
 - コンポーネントの属性やクラスが正しいか
-- propsが正しく受け取れるか
-- methodsが正しく動作するか
+- props が正しく受け取れるか
+- methods が正しく動作するか
 - 特定のイベントが発火した際に、正常に動作しているか
-- $emitでイベントが正しく発⽕するか
-- slotが正しく動作するか
+- $emit でイベントが正しく発⽕するか
+- slot が正しく動作するか
 
 ### 単純なボタンコンポーネントのテスト
 
@@ -329,105 +326,105 @@ test('should fetch users', async () => {
 </template>
 
 <script>
-export default {
-  name: 'FormSubmitter',
-  data() {
-    return {
-      username: '',
-      submitted: false,
-      asyncTest: false
-    };
-  },
-  methods: {
-    handleSubmit() {
-      this.submitted = true;
+  export default {
+    name: "FormSubmitter",
+    data() {
+      return {
+        username: "",
+        submitted: false,
+        asyncTest: false,
+      };
     },
-    handleSubmitAsync() {
-      return this.$http
-        .get('/api/v1/register', { username: this.username })
-        .then(() => {
-          this.submitted = true;
-        })
-        .catch(e => {
-          throw Error('Something went wrong', e);
-        });
-    }
-  }
-};
+    methods: {
+      handleSubmit() {
+        this.submitted = true;
+      },
+      handleSubmitAsync() {
+        return this.$http
+          .get("/api/v1/register", { username: this.username })
+          .then(() => {
+            this.submitted = true;
+          })
+          .catch((e) => {
+            throw Error("Something went wrong", e);
+          });
+      },
+    },
+  };
 </script>
 ```
 
 このコンポーネントに対しては以下のテストする。
 
 - フォームをサブミット後、ユーザーの入力に応じた正しいメッセージが表示されるか
-- 正しいAPIエンドポイントが使用されたかどうか
+- 正しい API エンドポイントが使用されたかどうか
 - リクエストボディは正しいか
 
-`handleSubmitAsync`メソッドはAPIを呼び出しているが、このAPI呼び出し（`/api/v1/register`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
+`handleSubmitAsync`メソッドは API を呼び出しているが、この API 呼び出し（`/api/v1/register`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
 
-それを防ぐためにJestの`jest.mock`を利用して、API呼び出しをしている`$http`を、`mocks`オプションを利用してモックに置き換える。
+それを防ぐために Jest の`jest.mock`を利用して、API 呼び出しをしている`$http`を、`mocks`オプションを利用してモックに置き換える。
 
 ```js
-import flushPromises from 'flush-promises';
-import { shallowMount } from '@vue/test-utils';
-import FormSubmitter from '@/components/simulating-user-input/FormSubmitter.vue';
+import flushPromises from "flush-promises";
+import { shallowMount } from "@vue/test-utils";
+import FormSubmitter from "@/components/simulating-user-input/FormSubmitter.vue";
 
-let url = '';
-let data = '';
+let url = "";
+let data = "";
 
 const mockHttp = {
   get: (_url, _data) => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       url = _url;
       data = _data;
       resolve();
     });
-  }
+  },
 };
 
-describe('FormSubmitter.vue', () => {
-  it('フォームをサブミットするとお知らせを表示', () => {
+describe("FormSubmitter.vue", () => {
+  it("フォームをサブミットするとお知らせを表示", () => {
     const wrapper = shallowMount(FormSubmitter);
 
     // ユーザー入力を再現する
-    wrapper.find('[data-username]').setValue('alice');
-    wrapper.find('form').trigger('submit.prevent');
+    wrapper.find("[data-username]").setValue("alice");
+    wrapper.find("form").trigger("submit.prevent");
 
-    expect(wrapper.find('.message').text()).toBe(
-      'Thank you for your submission, alice.'
+    expect(wrapper.find(".message").text()).toBe(
+      "Thank you for your submission, alice."
     );
   });
 
-  it('フォームをサブミットするとお知らせを表示（非同期）', async () => {
+  it("フォームをサブミットするとお知らせを表示（非同期）", async () => {
     const wrapper = shallowMount(FormSubmitter, {
       data() {
         return {
-          asyncTest: true
+          asyncTest: true,
         };
       },
       mocks: {
         // this.$httpをモック関数にする
-        $http: mockHttp
-      }
+        $http: mockHttp,
+      },
     });
 
-    wrapper.find('[data-username]').setValue('alice');
-    wrapper.find('form').trigger('submit.prevent');
+    wrapper.find("[data-username]").setValue("alice");
+    wrapper.find("form").trigger("submit.prevent");
 
     // サブミット時の非同期処理が完了するのを待つ
     // そうしないと、非同期処理の完了前にアサートが実行され、テストが失敗する
     await flushPromises();
 
-    expect(wrapper.find('.message').text()).toBe(
-      'Thank you for your submission, alice.'
+    expect(wrapper.find(".message").text()).toBe(
+      "Thank you for your submission, alice."
     );
-    expect(url).toBe('/api/v1/register');
-    expect(data).toEqual({ username: 'alice' });
+    expect(url).toBe("/api/v1/register");
+    expect(data).toEqual({ username: "alice" });
   });
 });
 ```
 
-## Vuexの単体テスト
+## Vuex の単体テスト
 
 以下がテスト対象になるが、それぞれはただの関数なので単体テストは容易にできる。
 
@@ -435,166 +432,166 @@ describe('FormSubmitter.vue', () => {
 - Actions
 - Getters
 
-### Mutaionsのテスト
+### Mutaions のテスト
 
-以下のMutaionをテストする。
+以下の Mutaion をテストする。
 
 ```js
 export default {
   SET_POST(state, { post }) {
     state.postIds.push(post.id);
     state.posts = { ...state.posts, [post.id]: post };
-  }
+  },
 };
 ```
 
-Mutaionに引数を渡してコミットすることで、Stateが正しく変更されているかをテストする。
+Mutaion に引数を渡してコミットすることで、State が正しく変更されているかをテストする。
 
 `SET_POST()`自体はただの関数なので、以下のように通常の関数と同じようにテストできる。
 
 ```js
-import mutations from '@/store/simple-example/mutations.js';
+import mutations from "@/store/simple-example/mutations.js";
 
-describe('SET_POST', () => {
-  it('state に投稿を追加する ', () => {
-    const post = { id: 1, title: 'post' };
+describe("SET_POST", () => {
+  it("state に投稿を追加する ", () => {
+    const post = { id: 1, title: "post" };
     const state = {
       postIds: [],
-      posts: {}
+      posts: {},
     };
 
     mutations.SET_POST(state, { post });
 
     expect(state).toEqual({
       postIds: [1],
-      posts: { '1': post }
+      posts: { 1: post },
     });
   });
 });
 ```
 
-### Actionsのテスト
+### Actions のテスト
 
-以下の動作をするActionをテストする。
+以下の動作をする Action をテストする。
 
-- APIを非同期呼び出しをする
+- API を非同期呼び出しをする
 - データに対して何らかの処理を行う
 - ペイロードとして結果を使ってミューテーションをコミットする
 
 ```js
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   async authenticate({ commit }, { username, password }) {
     try {
-      const authenticated = await axios.post('/api/authenticate', {
+      const authenticated = await axios.post("/api/authenticate", {
         username,
-        password
+        password,
       });
 
-      commit('SET_AUTHENTICATED', authenticated);
+      commit("SET_AUTHENTICATED", authenticated);
     } catch (e) {
-      throw Error('API Error occurred.');
+      throw Error("API Error occurred.");
     }
-  }
+  },
 };
 ```
 
-このActionに対しては以下のテストをする。
+この Action に対しては以下のテストをする。
 
-- 正しいAPIエンドポイントが使用されたかどうか
+- 正しい API エンドポイントが使用されたかどうか
 - リクエストボディは正しいか
 - 正しいミューテーションがコミットされたか
 
-今回テストするActionはAPIを呼び出しているが、このAPI呼び出し（`/api/authenticate`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
+今回テストする Action は API を呼び出しているが、この API 呼び出し（`/api/authenticate`）はブラウザ上での呼び出しを想定しているため、テスト実行時はリクエストに失敗し、テスト自体も失敗する。
 
-それを防ぐためにJestの`jest.mock`を利用して、API呼び出しをしている`axios`をモックに置き換える。
+それを防ぐために Jest の`jest.mock`を利用して、API 呼び出しをしている`axios`をモックに置き換える。
 
-また、Vuexの依存を排除するために、`commit`もモックに置き換える。
+また、Vuex の依存を排除するために、`commit`もモックに置き換える。
 
 ```js
-import actions from '@/store/simple-example/actions.js';
+import actions from "@/store/simple-example/actions.js";
 
-let url = '';
+let url = "";
 let body = {};
 let mockError = false;
 
 // axiosモジュールをモックにする
-jest.mock('axios', () => ({
+jest.mock("axios", () => ({
   // postメソッドを、Promiseを即時にresolveするようにオーバーライドする
   post: (_url, _body) => {
-    return new Promise(resolve => {
-      if (mockError) throw Error('Mock error');
+    return new Promise((resolve) => {
+      if (mockError) throw Error("Mock error");
       url = _url;
       body = _body;
       resolve(true);
     });
-  }
+  },
 }));
 
-describe('authenticate', () => {
-  it('authenticated a user ', async () => {
+describe("authenticate", () => {
+  it("authenticated a user ", async () => {
     // Vuexの依存を排除するために、commitはモックを利用する
     const commit = jest.fn();
-    const username = 'alice';
-    const password = 'password';
+    const username = "alice";
+    const password = "password";
 
     await actions.authenticate({ commit }, { username, password });
 
     // axios.post()に渡されたURLが正しいか
-    expect(url).toBe('/api/authenticate');
+    expect(url).toBe("/api/authenticate");
     // axios.post()に渡されたrequest bodyが正しいか
     expect(body).toEqual({ username, password });
     // commitが正しく実行されたか
-    expect(commit).toHaveBeenCalledWith('SET_AUTHENTICATED', true);
+    expect(commit).toHaveBeenCalledWith("SET_AUTHENTICATED", true);
   });
 
-  it('catches an error', async () => {
+  it("catches an error", async () => {
     mockError = true;
 
     await expect(
       actions.authenticate({ commit: jest.fn() }, {})
-    ).rejects.toThrow('API Error occurred.');
+    ).rejects.toThrow("API Error occurred.");
   });
 });
 ```
 
-### Gettersのテスト
+### Getters のテスト
 
-以下のGetterをテストする。
+以下の Getter をテストする。
 
 ```js
 export default {
-  poodles: state => {
-    return state.dogs.filter(dog => dog.breed === 'poodle');
+  poodles: (state) => {
+    return state.dogs.filter((dog) => dog.breed === "poodle");
   },
 
-  poodlesByAge: (state, getters) => age => {
-    return getters.poodles.filter(dog => dog.age === age);
-  }
+  poodlesByAge: (state, getters) => (age) => {
+    return getters.poodles.filter((dog) => dog.age === age);
+  },
 };
 ```
 
-これもMutaionsと同様でただの関数なので、以下のように通常の関数と同じようにテストできる。
+これも Mutaions と同様でただの関数なので、以下のように通常の関数と同じようにテストできる。
 
 ```js
-import getters from '@/store/simple-example/getters.js';
+import getters from "@/store/simple-example/getters.js";
 
 const dogs = [
-  { name: 'lucky', breed: 'poodle', age: 1 },
-  { name: 'pochy', breed: 'dalmatian', age: 2 },
-  { name: 'blackie', breed: 'poodle', age: 4 }
+  { name: "lucky", breed: "poodle", age: 1 },
+  { name: "pochy", breed: "dalmatian", age: 2 },
+  { name: "blackie", breed: "poodle", age: 4 },
 ];
 const state = { dogs };
 
-describe('poodles', () => {
-  it('returns poodles', () => {
+describe("poodles", () => {
+  it("returns poodles", () => {
     const actual = getters.poodles(state);
     expect(actual).toEqual([dogs[0], dogs[2]]);
   });
 
-  describe('poodlesByAge', () => {
-    it('returns poodles by age', () => {
+  describe("poodlesByAge", () => {
+    it("returns poodles by age", () => {
       const poodles = [dogs[0], dogs[2]];
       const actual = getters.poodlesByAge(state, { poodles })(1);
       expect(actual).toEqual([dogs[0]]);
@@ -603,12 +600,12 @@ describe('poodles', () => {
 });
 ```
 
-`poodlesByAge`は他のGetterに依存しているGetterだが、他のGetterが正しく動いている前提でテストをするので`const poodles = [dogs[0], dogs[2]];`のような固定値を引数に渡して問題ない。
+`poodlesByAge`は他の Getter に依存している Getter だが、他の Getter が正しく動いている前提でテストをするので`const poodles = [dogs[0], dogs[2]];`のような固定値を引数に渡して問題ない。
 
 そのため、以下のようなテストをする必要はない。
 
 ```js
-it('returns poodles by age', () => {
+it("returns poodles by age", () => {
   const poodles = getters.poodles(state);
   const actual = getters.poodlesByAge(state, { poodles })(1);
   expect(actual).toEqual([dogs[0]]);
@@ -619,7 +616,7 @@ it('returns poodles by age', () => {
 
 ## Note
 
-babel7でvue-jestを利用するためには`babel-core@7.0.0-bridge.0`が必要。
+babel7 で vue-jest を利用するためには`babel-core@7.0.0-bridge.0`が必要。
 
 - https://github.com/vuejs/vue-jest/issues/160
 - https://github.com/vuejs/vue-jest/pull/173/files/21527df0d950b4cfe11e75b16003ca591d270332
